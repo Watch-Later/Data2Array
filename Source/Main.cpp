@@ -37,7 +37,7 @@
 #include <stdio.h>
 
 
-#define MAX_PRINT_PER_LINE 20
+#define MAX_PRINT_PER_LINE 16
 
 typedef std::string String;
 typedef std::vector<String> StringArray;
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
         String opt = argv[i];
         std::transform(opt.begin(), opt.end(), opt.begin(), std::tolower);
 
-        printf("%s ", opt.c_str());
+        //printf("%s ", opt.c_str());
         if (opt == "-b")
             c.bin = true;
         else if (opt == "-f")
@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         {
             if (i + 1 < argc)
             {
-                printf("%s ", argv[i+1]);
+                //printf("%s ", argv[i+1]);
                 c.m_output = argv[++i];
             }
         }
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
             ++i;
             while (i < argc)
             {
-                printf("%s ", argv[i]);
+                //printf("%s ", argv[i]);
                 c.m_input.push_back(argv[i++]);
 
             }
