@@ -1,16 +1,29 @@
 # Data2Array
+Tool to pack external files into an array
 
-
+### Usage
 ```
- set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
-  .. 
-  include(Data2Array)
+Usage: Data2Array <opts> -o <output file> -i <Input file(s)>
 
-  add_templates(some_file_name.h templ1.ext templ2.ext ... etc)
+    <opts>:
+       -b - generate array for the unsigned char datatype [0x00-0xFF]
+       -f - generate for ASCII characters only.
+```
 
-  set(SRCFILES 
+### Usage for CMake
+```
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+include(Data2Array)
+
+add_templates(
+    some_file_name.h 
+    templ1.ext 
+    templ2.ext)
+
+set(SRCFILES 
     some_file_name.h
-    ...
-  )
-  add_executable(SomeTarget ${SRCFILES})
+    main.cpp
+)
+add_executable(SomeTarget ${SRCFILES})
+
 ```

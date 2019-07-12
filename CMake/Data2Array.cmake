@@ -1,38 +1,39 @@
 set(D2A_EXECUTABLE Data2Array)
 
-# ----------------------------------------------------------------------------
-#  Usage:
-#
-#  add_templates(some_file_name.h templ1.ext templ2.ext ... etc)
-#
-#  set(SRCFILES 
-#    some_file_name.h
-#    ...
-#  )
-#  add_executable(SomeTarget ${SRCFILES})
-#
-macro(ADD_TEMPLATES GENERATED)
+macro(ADD_TEMPLATES_IMPL GENERATED PARAMS)
 
     get_filename_component(OUTFILE ${GENERATED} ABSOLUTE)
 
-    set (TEMPLATES )
+    set(TEMPLATES)
+
+
     foreach (it ${ARGN})
         get_filename_component(N ${it} ABSOLUTE)
-        list(APPEND ${TEMPLATES} ${N})
+        list(APPEND TEMPLATES ${N})
     endforeach(it)
-
+    
     get_filename_component(ONAME ${OUTFILE} NAME)
+
+
     add_custom_command(
 	    OUTPUT  ${OUTFILE}
-	    COMMAND ${D2A_EXECUTABLE} -O ${OUTFILE} -T -B  -I ${TEMPLATES}
-	    DEPENDS ${D2A_EXECUTABLE}   ${TEMPLATES}
-	    COMMENT "Building ${ONAME}"
+	    COMMAND ${D2A_EXECUTABLE} ${PARAMS} -O ${OUTFILE} -I ${TEMPLATES}
+	    DEPENDS ${D2A_EXECUTABLE} ${TEMPLATES}
+	    COMMENT "Converting ${ONAME}"
 	    )
 
     set(${GENERATED} ${OUTFILE})
 
-    unset(TEMPLATES )
-    unset(OUTFILE )
-    unset(ONAME )
+endmacro(ADD_TEMPLATES_IMPL)
+
+
+
+
+macro(ADD_TEMPLATES GENERATED)
+    add_templates_impl(${GENERATED} -B ${ARGN})
 endmacro(ADD_TEMPLATES)
+
+macro(ADD_TEMPLATES_TEXT GENERATED)
+    add_templates_impl(${GENERATED} -f ${ARGN})
+endmacro(ADD_TEMPLATES_TEXT)
 

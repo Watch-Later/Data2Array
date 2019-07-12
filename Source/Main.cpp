@@ -82,9 +82,8 @@ int main(int argc, char** argv)
         std::cout << "Usage: " << argv[0] << " <opts>";
         std::cout << "-o <output file> -i <Input file(s)>\n";
         std::cout << " <opts>\n";
-        std::cout << "    -b - open as binary file\n";
-        std::cout << "    -c - output c-sharp array\n";
-        std::cout << "    -f - filter anything other than <0...127>\n";
+        std::cout << "    -b - generate array for the unsigned char datatype [0x00-0xFF]\n";
+        std::cout << "    -f - generate for ASCII characters only. \n";
         return 1;
     }
     int i = 1;
@@ -95,24 +94,28 @@ int main(int argc, char** argv)
         String opt = argv[i];
         std::transform(opt.begin(), opt.end(), opt.begin(), std::tolower);
 
+        printf("%s ", opt.c_str());
         if (opt == "-b")
             c.bin = true;
-        else if (opt == "-c")
-            c.cs = true;
-        else if (opt == "-j")
-            c.java = true;
         else if (opt == "-f")
             c.filter = true;
         else if (opt == "-o")
         {
             if (i + 1 < argc)
+            {
+                printf("%s ", argv[i+1]);
                 c.m_output = argv[++i];
+            }
         }
         else if (opt == "-i")
         {
             ++i;
             while (i < argc)
+            {
+                printf("%s ", argv[i]);
                 c.m_input.push_back(argv[i++]);
+
+            }
         }
     }
 
@@ -223,14 +226,10 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
         replace(name, ".", "_");
         upper(name);
 
-        if (java)
-            fprintf(fp, "public static final char %s[]={\n", name.c_str());
-        else if (cs)
-            fprintf(fp, "static int %s[]={\n", name.c_str());
-        else if (filter)
-            fprintf(fp, "static char %s[]={\n", name.c_str());
+        if (filter)
+            fprintf(fp, "static char %s[%i]={\n", name.c_str(), fileSize+1);
         else
-            fprintf(fp, "static unsigned char %s[]={\n", name.c_str());
+            fprintf(fp, "static unsigned char %s[%i]={\n", name.c_str(), fileSize+1);
 
         fprintf(fp, "    ");
         for (int i = 0; i < fileSize; ++i)
@@ -245,11 +244,10 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
             if (i % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
                 fprintf(fp, "\n    ");
         }
-        if (bin)
-            fprintf(fp, "0x00");
+        fprintf(fp, "0x00");
 
         fprintf(fp, "\n};// %s\n", name.c_str());
-        fprintf(fp, "unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
+        fprintf(fp, "static unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
 
         delete[]data;
     }
