@@ -227,7 +227,7 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
         upper(name);
 
         if (filter)
-            fprintf(fp, "static char %s[%i]={\n", name.c_str(), fileSize+1);
+            fprintf(fp, "static char %s[%i]={\n", name.c_str(), fileSize);
         else
             fprintf(fp, "static unsigned char %s[%i]={\n", name.c_str(), fileSize+1);
 
@@ -240,11 +240,29 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
                 if (cp < 9 && cp > 127)
                     continue;
             }
-            fprintf(fp, "0x%02X,", ((int)cp));
+
+            fprintf(fp, "0x%02X", ((int)cp));
+
+            if (filter)
+            {
+                if (i + 1 < fileSize)
+                    fprintf(fp, ", ");
+            }
+            else
+            {
+                fprintf(fp, ", ");
+            }
+
+
+
             if (i % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
                 fprintf(fp, "\n    ");
         }
-        fprintf(fp, "0x00");
+        if (!filter)
+        {
+            fprintf(fp, "0x00");
+            fileSize += 1;
+        }
 
         fprintf(fp, "\n};// %s\n", name.c_str());
         fprintf(fp, "static unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
