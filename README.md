@@ -6,7 +6,7 @@ Tool to pack external files into an array
 Usage: Data2Array <opts> -o <output file> -i <input file(s)>
 
     <opts>:
-       -b - generate array for the unsigned char datatype [0x00-0xFF]
+       -b - generate array for the unsigned char datatype [0, 255]
        -f - generate for ASCII characters only.
 ```
 
