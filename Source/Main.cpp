@@ -94,7 +94,6 @@ int main(int argc, char** argv)
         String opt = argv[i];
         std::transform(opt.begin(), opt.end(), opt.begin(), std::tolower);
 
-        //printf("%s ", opt.c_str());
         if (opt == "-b")
             c.bin = true;
         else if (opt == "-f")
@@ -102,20 +101,13 @@ int main(int argc, char** argv)
         else if (opt == "-o")
         {
             if (i + 1 < argc)
-            {
-                //printf("%s ", argv[i+1]);
                 c.m_output = argv[++i];
-            }
         }
         else if (opt == "-i")
         {
             ++i;
             while (i < argc)
-            {
-                //printf("%s ", argv[i]);
                 c.m_input.push_back(argv[i++]);
-
-            }
         }
     }
 
@@ -227,9 +219,9 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
         upper(name);
 
         if (filter)
-            fprintf(fp, "static char %s[%i]={\n", name.c_str(), fileSize);
+            fprintf(fp, "const char %s[%i]={\n", name.c_str(), fileSize+1);
         else
-            fprintf(fp, "static unsigned char %s[%i]={\n", name.c_str(), fileSize+1);
+            fprintf(fp, "const unsigned char %s[%i]={\n", name.c_str(), fileSize+1);
 
         fprintf(fp, "    ");
         for (int i = 0; i < fileSize; ++i)
@@ -249,24 +241,16 @@ void Compiler::writeSource(FILE* fp, const String& fileName)
                     fprintf(fp, ", ");
             }
             else
-            {
                 fprintf(fp, ", ");
-            }
-
-
 
             if (i % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
                 fprintf(fp, "\n    ");
         }
-        if (!filter)
-        {
-            fprintf(fp, "0x00");
-            fileSize += 1;
-        }
+        fprintf(fp, "0x00");
+        fileSize += 1;
 
         fprintf(fp, "\n};// %s\n", name.c_str());
-        fprintf(fp, "static unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
-
+        fprintf(fp, "const unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
         delete[]data;
     }
 }
