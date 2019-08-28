@@ -26,78 +26,73 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
-
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <sstream>
-#include <cctype>
 #include <algorithm>
+#include <cctype>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
-#include <stdio.h>
+using namespace std;
 
 
 #define MAX_PRINT_PER_LINE 16
+typedef vector<string> svector;
 
-typedef std::string String;
-typedef std::vector<String> StringArray;
 
 
 class Compiler
 {
 public:
     Compiler();
-    ~Compiler() {}
+    ~Compiler()
+    {
+    }
 
-    bool bin;
-    bool java;
-    bool cs;
-    bool filter;
+    bool    m_bin;
+    bool    m_filter;
+    string  m_output;
+    svector m_input;
 
-    String      m_output;
-    StringArray m_input;
-
-    void writeSource(FILE* fp, const String& filename);
+    void writeSource(FILE* fp, const string& filename);
 
 private:
+    void upper(string& str);
+    void split(svector& dest, const string& spl, const string& expr);
+    void replace(string& in, const string& from, const string& to);
+    void getAsBuffer(const string& in, char** buffer, int& fileSize);
 
-    void upper(String& str);
-    void split(StringArray& dest, const String& spl, const String& expr);
-    void replace(String& in, const String& from, const String& to);
-    void getAsBuffer(const String& in, char** buffer, int& fileSize);
-
-    String base(const String& in);
-    String extension(const String& in);
+    string base(const string& in);
+    string extension(const string& in);
 };
-
-
-
 
 
 
 int main(int argc, char** argv)
 {
+    int      i;
+    Compiler c;
+
     if (argc <= 3)
     {
-        std::cout << "Usage: " << argv[0] << " <opts>";
-        std::cout << "-o <output file> -i <Input file(s)>\n";
-        std::cout << " <opts>\n";
-        std::cout << "    -b - generate array for the unsigned char datatype [0x00-0xFF]\n";
-        std::cout << "    -f - generate for ASCII characters only. \n";
+        cout << "Usage: " << argv[0] << " <opts>";
+        cout << "-o <output file> -i <Input file(s)>\n";
+        cout << " <opts>\n";
+        cout << "    -b - generate array for the unsigned char datatype [0x00-0xFF]\n";
+        cout << "    -f - generate for ASCII characters only. \n";
         return 1;
     }
-    int i = 1;
 
-    Compiler c;
     for (i = 1; i < argc; ++i)
     {
-        String opt = argv[i];
-        std::transform(opt.begin(), opt.end(), opt.begin(), std::tolower);
+        string opt = argv[i];
+        transform(opt.begin(), opt.end(), opt.begin(), tolower);
 
         if (opt == "-b")
-            c.bin = true;
+            c.m_bin = true;
         else if (opt == "-f")
-            c.filter = true;
+            c.m_filter = true;
         else if (opt == "-o")
         {
             if (i + 1 < argc)
@@ -109,6 +104,8 @@ int main(int argc, char** argv)
             while (i < argc)
                 c.m_input.push_back(argv[i++]);
         }
+        else
+            cout << "Unknown option '" << opt << "'." << endl;
     }
 
 #ifdef _WIN32
@@ -116,85 +113,83 @@ int main(int argc, char** argv)
 #else
     FILE* fp = fopen(c.m_output.c_str(), "wb");
 #endif
+
     if (!fp)
     {
-        printf("Failed to load file %s\n", argv[1]);
+        cout << "Failed to load file '" << c.m_output << "'." << endl;
         return -1;
     }
 
 
-    StringArray::iterator it = c.m_input.begin();
+    svector::iterator it = c.m_input.begin();
     while (it != c.m_input.end())
         c.writeSource(fp, (*it++).c_str());
-
     fclose(fp);
     return 0;
 }
 
 
 
-
 Compiler::Compiler() :
-    bin(false),
-    java(false),
-    cs(false),
-    filter(false),
+    m_bin(false),
+    m_filter(false),
     m_output("")
 {
 }
 
-void Compiler::upper(String& str)
+void Compiler::upper(string& str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), toupper);
+    transform(str.begin(), str.end(), str.begin(), toupper);
 }
 
 
-void Compiler::split(StringArray& rval, const String& spl, const String& expr)
+void Compiler::split(svector& rval, const string& spl, const string& expr)
 {
-    String string = spl;
+    string str = spl;
     rval.reserve(32);
     for (;;)
     {
-        size_t pos = string.find_first_of(expr);
-        if (pos != String::npos)
+        size_t pos = str.find_first_of(expr);
+        if (pos != string::npos)
         {
             if (pos == 0)
                 pos = pos + 1;
-            String sub = string.substr(0, pos);
-            if (!sub.empty() && expr.find(sub) == String::npos)
-                rval.push_back(sub);
-            string.erase(0, pos);
+
+            string ss = str.substr(0, pos);
+            if (!ss.empty() && expr.find(ss) == string::npos)
+                rval.push_back(ss);
+            str.erase(0, pos);
         }
         else
         {
-            if (!string.empty())
-                rval.push_back(string);
+            if (!str.empty())
+                rval.push_back(str);
             break;
         }
     }
 }
 
-void Compiler::replace(String& in, const String& from, const String& to)
+void Compiler::replace(string& in, const string& from, const string& to)
 {
     if (!from.empty() && from != to)
     {
         if (to.empty())
         {
             size_t pos = 0;
-            while (pos != String::npos)
+            while (pos != string::npos)
             {
                 pos = in.find(from);
-                if (pos != String::npos)
+                if (pos != string::npos)
                     in.erase(pos, from.size());
             }
         }
         else
         {
             size_t pos = 0;
-            while (pos != String::npos)
+            while (pos != string::npos)
             {
                 pos = in.find(from);
-                if (pos != String::npos)
+                if (pos != string::npos)
                 {
                     in.erase(pos, from.size());
                     in.insert(pos, to);
@@ -204,58 +199,59 @@ void Compiler::replace(String& in, const String& from, const String& to)
     }
 }
 
-void Compiler::writeSource(FILE* fp, const String& fileName)
+void Compiler::writeSource(FILE* fp, const string& fileName)
 {
+    int           fileSize = 0, i, cp;
+    char*         data     = 0;
 
-    int fileSize = 0;
-    char* data = 0;
     getAsBuffer(fileName, &data, fileSize);
 
     if (data != 0 && fileSize > 0)
     {
-        String name = base(fileName);
+        string name = base(fileName);
         replace(name, extension(fileName), "");
         replace(name, ".", "_");
         upper(name);
 
-        if (filter)
-            fprintf(fp, "const char %s[%i]={\n", name.c_str(), fileSize+1);
+        if (m_filter)
+            fprintf(fp, "const char %s[]={\n", name.c_str());
         else
-            fprintf(fp, "const unsigned char %s[%i]={\n", name.c_str(), fileSize+1);
+            fprintf(fp, "const unsigned char %s[%i]={\n", name.c_str(), fileSize + 1);
 
         fprintf(fp, "    ");
-        for (int i = 0; i < fileSize; ++i)
+
+
+        int acc = 0, wb = 0;
+
+
+        for (i = 0; i < fileSize; ++i)
         {
-            unsigned char cp = data[i];
-            if (filter)
+            cp = (int)(unsigned char)data[i];
+            if (m_filter)
             {
-                if (cp < 9 && cp > 127)
-                    continue;
-            }
-
-            fprintf(fp, "0x%02X", ((int)cp));
-
-            if (filter)
-            {
-                if (i + 1 < fileSize)
-                    fprintf(fp, ", ");
+                if (cp > 9 && cp < 127)
+                    acc++;
             }
             else
-                fprintf(fp, ", ");
-
-            if (i % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
-                fprintf(fp, "\n    ");
+                ++acc;
+            if (acc > wb)
+            {
+                fprintf(fp, "0x%02X, ", cp);
+                if ((acc-1) % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
+                    fprintf(fp, "\n    ");
+               wb = acc;
+            }
         }
-        fprintf(fp, "0x00");
-        fileSize += 1;
 
+        fprintf(fp, "0x00");
         fprintf(fp, "\n};// %s\n", name.c_str());
-        fprintf(fp, "const unsigned int %s_SIZE=%i;\n\n", name.c_str(), fileSize);
-        delete[]data;
+        fprintf(fp, "const unsigned int %s_SIZE=sizeof(%s);\n\n", name.c_str(), name.c_str());
+        delete[] data;
     }
 }
 
-void Compiler::getAsBuffer(const String& in, char** buffer, int& fileSize)
+
+void Compiler::getAsBuffer(const string& in, char** buffer, int& fileSize)
 {
     if (!buffer)
         return;
@@ -271,22 +267,21 @@ void Compiler::getAsBuffer(const String& in, char** buffer, int& fileSize)
     if (fileSize > 0)
     {
         char* data = new char[fileSize + 1];
-        fileSize = fread(data, 1, fileSize, fp);
+        fread(data, 1, fileSize, fp);
         data[fileSize] = 0;
         (*buffer) = data;
-        (*buffer)[fileSize] = 0;
     }
 
     fclose(fp);
 }
 
 
-String Compiler::base(const String& in)
+string Compiler::base(const string& in)
 {
-    String path = in;
+    string path = in;
     replace(path, "\\", "/");
 
-    std::vector<String> arr;
+    vector<string> arr;
     split(arr, path, "/");
 
     if (arr.empty())
@@ -296,17 +291,17 @@ String Compiler::base(const String& in)
 }
 
 
-String Compiler::extension(const String& in)
+string Compiler::extension(const string& in)
 {
-    String name = base(in);
+    string name = base(in);
     if (name.empty())
         return "";
 
-    std::vector<String> arr;
+    vector<string> arr;
     split(arr, name, ".");
 
     if (arr.empty())
         return "";
 
-    return String(".") + arr.at(arr.size() - 1);
+    return string(".") + arr.at(arr.size() - 1);
 }
