@@ -28,12 +28,15 @@
 #endif
 #include <algorithm>
 #include <cctype>
+#include <ctype.h>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <functional>
+
 using namespace std;
 
 
@@ -87,7 +90,8 @@ int main(int argc, char** argv)
     for (i = 1; i < argc; ++i)
     {
         string opt = argv[i];
-        transform(opt.begin(), opt.end(), opt.begin(), tolower);
+        std::transform(opt.begin(), opt.end(), opt.begin(), std::ptr_fun<int, int>(std::tolower));
+
 
         if (opt == "-b")
             c.m_bin = true;
@@ -139,7 +143,7 @@ Compiler::Compiler() :
 
 void Compiler::upper(string& str)
 {
-    transform(str.begin(), str.end(), str.begin(), toupper);
+    std::transform(str.begin(), str.end(), str.begin(), std::ptr_fun<int, int>(std::toupper));
 }
 
 
