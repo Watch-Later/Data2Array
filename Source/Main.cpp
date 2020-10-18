@@ -28,49 +28,39 @@
 #endif
 #include <algorithm>
 #include <cctype>
-#include <ctype.h>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
-#include <functional>
 
 using namespace std;
-
-
 #define MAX_PRINT_PER_LINE 16
-typedef vector<string> svector;
 
-
+typedef vector<string> svec_t;
 
 class Compiler
 {
 public:
     Compiler();
-    ~Compiler()
-    {
-    }
 
-    bool    m_bin;
-    bool    m_filter;
-    string  m_output;
-    svector m_input;
+    bool   m_bin;
+    bool   m_filter;
+    string m_output;
+    svec_t m_input;
 
     void writeSource(FILE* fp, const string& filename);
 
 private:
-    void upper(string& str);
-    void split(svector& dest, const string& spl, const string& expr);
+    void upper(string& str) const;
+    void split(svec_t& dest, const string& spl, const string& expr);
     void replace(string& in, const string& from, const string& to);
     void getAsBuffer(const string& in, char** buffer, int& fileSize);
 
     string base(const string& in);
     string extension(const string& in);
 };
-
-
 
 int main(int argc, char** argv)
 {
@@ -90,7 +80,7 @@ int main(int argc, char** argv)
     for (i = 1; i < argc; ++i)
     {
         string opt = argv[i];
-        std::transform(opt.begin(), opt.end(), opt.begin(), std::ptr_fun<int, int>(std::tolower));
+        transform(opt.begin(), opt.end(), opt.begin(), ptr_fun<int, int>(tolower));
 
 
         if (opt == "-b")
@@ -125,9 +115,9 @@ int main(int argc, char** argv)
     }
 
 
-    svector::iterator it = c.m_input.begin();
+    auto it = c.m_input.begin();
     while (it != c.m_input.end())
-        c.writeSource(fp, (*it++).c_str());
+        c.writeSource(fp, *it++);
     fclose(fp);
     return 0;
 }
@@ -141,13 +131,16 @@ Compiler::Compiler() :
 {
 }
 
-void Compiler::upper(string& str)
+void Compiler::upper(string& str) const
 {
-    std::transform(str.begin(), str.end(), str.begin(), std::ptr_fun<int, int>(std::toupper));
+    transform(str.begin(),
+              str.end(),
+              str.begin(),
+              ptr_fun<int, int>(toupper));
 }
 
 
-void Compiler::split(svector& rval, const string& spl, const string& expr)
+void Compiler::split(svec_t& rval, const string& spl, const string& expr)
 {
     string str = spl;
     rval.reserve(32);
@@ -205,12 +198,11 @@ void Compiler::replace(string& in, const string& from, const string& to)
 
 void Compiler::writeSource(FILE* fp, const string& fileName)
 {
-    int           fileSize = 0, i, cp;
-    char*         data     = 0;
-
+    int   fileSize = 0, i, cp;
+    char* data     = nullptr;
     getAsBuffer(fileName, &data, fileSize);
 
-    if (data != 0 && fileSize > 0)
+    if (data != nullptr && fileSize > 0)
     {
         string name = base(fileName);
         replace(name, extension(fileName), "");
@@ -224,10 +216,7 @@ void Compiler::writeSource(FILE* fp, const string& fileName)
 
         fprintf(fp, "    ");
 
-
         int acc = 0, wb = 0;
-
-
         for (i = 0; i < fileSize; ++i)
         {
             cp = (int)(unsigned char)data[i];
@@ -241,9 +230,9 @@ void Compiler::writeSource(FILE* fp, const string& fileName)
             if (acc > wb)
             {
                 fprintf(fp, "0x%02X, ", cp);
-                if ((acc-1) % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
+                if ((acc - 1) % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
                     fprintf(fp, "\n    ");
-               wb = acc;
+                wb = acc;
             }
         }
 
@@ -270,10 +259,11 @@ void Compiler::getAsBuffer(const string& in, char** buffer, int& fileSize)
 
     if (fileSize > 0)
     {
-        char* data = new char[fileSize + 1];
+        char* data = new char[(size_t)fileSize + 1];
         fread(data, 1, fileSize, fp);
+
         data[fileSize] = 0;
-        (*buffer) = data;
+        *buffer        = data;
     }
 
     fclose(fp);

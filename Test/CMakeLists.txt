@@ -9,4 +9,4 @@ set(SRC
     Test2.in
 )
 
-add_executable(Test ${SRC})
+add_executable(Test.Data2Array ${SRC})
