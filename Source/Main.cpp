@@ -207,6 +207,7 @@ void Compiler::writeSource(FILE* fp, const string& fileName)
         string name = base(fileName);
         replace(name, extension(fileName), "");
         replace(name, ".", "_");
+        replace(name, "-", "_");
         upper(name);
 
         if (m_filter)
