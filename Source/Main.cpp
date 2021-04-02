@@ -45,6 +45,7 @@ class Compiler
 public:
     Compiler();
 
+    bool   m_compact;
     bool   m_bin;
     bool   m_filter;
     string m_output;
@@ -72,6 +73,7 @@ int main(int argc, char** argv)
         cout << "Usage: " << argv[0] << " <opts>";
         cout << "-o <output file> -i <Input file(s)>\n";
         cout << " <opts>\n";
+        cout << "    -c - compact\n";
         cout << "    -b - generate array for the unsigned char datatype [0x00-0xFF]\n";
         cout << "    -f - generate for ASCII characters only. \n";
         return 1;
@@ -82,11 +84,12 @@ int main(int argc, char** argv)
         string opt = argv[i];
         transform(opt.begin(), opt.end(), opt.begin(), ptr_fun<int, int>(tolower));
 
-
         if (opt == "-b")
             c.m_bin = true;
         else if (opt == "-f")
             c.m_filter = true;
+        else if (opt == "-c")
+            c.m_compact = true;
         else if (opt == "-o")
         {
             if (i + 1 < argc)
@@ -114,7 +117,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-
     auto it = c.m_input.begin();
     while (it != c.m_input.end())
         c.writeSource(fp, *it++);
@@ -122,9 +124,8 @@ int main(int argc, char** argv)
     return 0;
 }
 
-
-
 Compiler::Compiler() :
+    m_compact(false),
     m_bin(false),
     m_filter(false),
     m_output("")
@@ -138,7 +139,6 @@ void Compiler::upper(string& str) const
               str.begin(),
               ptr_fun<int, int>(toupper));
 }
-
 
 void Compiler::split(svec_t& rval, const string& spl, const string& expr)
 {
@@ -211,11 +211,15 @@ void Compiler::writeSource(FILE* fp, const string& fileName)
         upper(name);
 
         if (m_filter)
-            fprintf(fp, "const char %s[]={\n", name.c_str());
+            fprintf(fp, "const char %s[]={", name.c_str());
         else
-            fprintf(fp, "const unsigned char %s[%i]={\n", name.c_str(), fileSize + 1);
+            fprintf(fp, "const unsigned char %s[%i]={", name.c_str(), fileSize + 1);
 
-        fprintf(fp, "    ");
+        if (!m_compact)
+        {
+            fprintf(fp, "\n");
+            fprintf(fp, "    ");
+        }
 
         int acc = 0, wb = 0;
         for (i = 0; i < fileSize; ++i)
@@ -230,20 +234,38 @@ void Compiler::writeSource(FILE* fp, const string& fileName)
                 ++acc;
             if (acc > wb)
             {
-                fprintf(fp, "0x%02X, ", cp);
-                if ((acc - 1) % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
-                    fprintf(fp, "\n    ");
+                if (m_compact)
+                {
+                    if (cp==0)
+                        fprintf(fp, "0,");
+                    else
+                        fprintf(fp, "0x%01X,", cp);
+                }
+                else
+                {
+                    fprintf(fp, "0x%02X, ", cp);
+                    if ((acc - 1) % (MAX_PRINT_PER_LINE) == (MAX_PRINT_PER_LINE - 1))
+                        fprintf(fp, "\n    ");
+                }
+
                 wb = acc;
             }
         }
 
         fprintf(fp, "0x00");
-        fprintf(fp, "\n};// %s\n", name.c_str());
-        fprintf(fp, "const unsigned int %s_SIZE=sizeof(%s);\n\n", name.c_str(), name.c_str());
+        if (!m_compact)
+            fprintf(fp, "\n");
+        fprintf(fp, "};");
+        if (!m_compact)
+            fprintf(fp, "// %s\n", name.c_str());
+
+        fprintf(fp, "const unsigned int %s_SIZE=sizeof(%s);", name.c_str(), name.c_str());
+        if (!m_compact)
+            fprintf(fp, "\n\n");
+
         delete[] data;
     }
 }
-
 
 void Compiler::getAsBuffer(const string& in, char** buffer, int& fileSize)
 {
@@ -270,7 +292,6 @@ void Compiler::getAsBuffer(const string& in, char** buffer, int& fileSize)
     fclose(fp);
 }
 
-
 string Compiler::base(const string& in)
 {
     string path = in;
@@ -284,7 +305,6 @@ string Compiler::base(const string& in)
 
     return arr.at(arr.size() - 1);
 }
-
 
 string Compiler::extension(const string& in)
 {
