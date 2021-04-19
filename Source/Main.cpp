@@ -63,6 +63,19 @@ private:
     string extension(const string& in);
 };
 
+
+char cast_hack_to_lower(char in)
+{
+    return (char)tolower(in);
+}
+
+
+char cast_hack_to_upper(char in)
+{
+    return (char)toupper(in);
+}
+
+
 int main(int argc, char** argv)
 {
     int      i;
@@ -82,7 +95,7 @@ int main(int argc, char** argv)
     for (i = 1; i < argc; ++i)
     {
         string opt = argv[i];
-        transform(opt.begin(), opt.end(), opt.begin(), ptr_fun<int, int>(tolower));
+        transform(opt.begin(), opt.end(), opt.begin(), cast_hack_to_lower);
 
         if (opt == "-b")
             c.m_bin = true;
@@ -137,7 +150,7 @@ void Compiler::upper(string& str) const
     transform(str.begin(),
               str.end(),
               str.begin(),
-              ptr_fun<int, int>(toupper));
+              cast_hack_to_upper);
 }
 
 void Compiler::split(svec_t& rval, const string& spl, const string& expr)
