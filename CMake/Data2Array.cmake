@@ -1,4 +1,10 @@
-set(D2A_EXECUTABLE Data2Array)
+find_package(Data2Array)
+if (Data2Array_FOUND)
+    set(D2A_EXECUTABLE ${Data2Array_EXE})
+else()
+    set(D2A_EXECUTABLE Data2Array)
+endif()
+
 
 macro(ADD_TEMPLATES_IMPL GENERATED PARAMS)
 
