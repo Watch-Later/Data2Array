@@ -11,9 +11,7 @@ Usage: Data2Array <opts> -o <output file> -i <input file(s)>
        -f - generate for ASCII characters only.
 ```
 
-
-
-## Usage for CMake
+### Usage for CMake
 ```cmake
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake/Path/To/Data2Array.cmake)
 
@@ -48,7 +46,7 @@ const unsigned int TEST_SIZE=109;
 ```
 
 
-# Building 
+## Building 
 
 It uses CMake to generate its make files. 
 
