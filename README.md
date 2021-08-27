@@ -1,7 +1,8 @@
 # Data2Array
-Tool to pack external files into an array
 
-### Usage
+Is a resource compiler that packs the supplied input into a C/C++ array. 
+
+## Usage
 ```
 Usage: Data2Array <opts> -o <output file> -i <input file(s)>
 
@@ -10,9 +11,12 @@ Usage: Data2Array <opts> -o <output file> -i <input file(s)>
        -f - generate for ASCII characters only.
 ```
 
-### Usage for CMake
-```
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+
+
+## Usage for CMake
+```cmake
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake/Path/To/Data2Array.cmake)
+
 include(Data2Array)
 
 add_templates(
@@ -27,9 +31,9 @@ add_executable(SomeTarget ${SRCFILES})
 
 ```
 
-
 ### Output
-```
+
+```cpp
 const unsigned char TEST[110]={
     0x23, 0x69, 0x6E, 0x63, 0x6C, 0x75, 0x64, 0x65, 0x20, 0x22, 0x73, 0x74, 0x64, 0x69, 0x6F, 0x2E, 
     0x68, 0x22, 0x0D, 0x0A, 0x0D, 0x0A, 0x69, 0x6E, 0x74, 0x20, 0x6D, 0x61, 0x69, 0x6E, 0x28, 0x69, 
@@ -42,3 +46,11 @@ const unsigned char TEST[110]={
 const unsigned int TEST_SIZE=109;
 
 ```
+
+
+# Building 
+
+It uses CMake to generate its make files. 
+
+It has been tested with CMake's VisualStudio and Unix Makefile generators.   
+
